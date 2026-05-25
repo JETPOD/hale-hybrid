@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HALE-Hybrid — Espérance de vie en bonne santé (capacités + mode de vie)</title>
+<meta name="description" content="Calculateur hybride HALE — fusion des capacités physiques fonctionnelles (VO2max, pompes, handgrip, sit-to-stand, vitesse marche, équilibre) et des variables mode de vie/biomarqueurs les plus prédictives (HR>1.5). Mode public/sportif, biomarqueurs optionnels.">
+<style>
+:root{
+  --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-200:#a7f3d0;
+  --emerald-400:#34d399; --emerald-500:#10b981; --emerald-600:#059669;
+  --emerald-700:#047857; --emerald-800:#065f46; --emerald-900:#064e3b;
+  --teal-500:#14b8a6; --teal-600:#0d9488; --teal-700:#0f766e;
+  --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0;
+  --slate-300:#cbd5e1; --slate-400:#94a3b8; --slate-500:#64748b;
+  --slate-600:#475569; --slate-700:#334155; --slate-800:#1e293b; --slate-900:#0f172a;
+  --amber-400:#fbbf24; --amber-500:#f59e0b; --amber-600:#d97706;
+  --rose-400:#fb7185; --rose-500:#f43f5e; --rose-600:#e11d48;
+  --green-grad:linear-gradient(135deg,#10b981 0%,#14b8a6 100%);
+  --bg-grad:linear-gradient(135deg,#f8fafc 0%,#ecfdf5 100%);
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.08),0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 25px -5px rgba(0,0,0,0.10),0 8px 10px -6px rgba(0,0,0,0.05);
+  --radius:12px; --radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"General Sans","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg-grad);color:var(--slate-800);line-height:1.6;
+  min-height:100vh;padding:24px 16px;
+}
+.container{max-width:1100px;margin:0 auto}
+header{text-align:center;margin-bottom:32px}
+.badge{
+  display:inline-block;background:var(--emerald-100);color:var(--emerald-800);
+  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:600;
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px;
+}
+h1{
+  font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;color:var(--slate-900);
+  margin-bottom:8px;letter-spacing:-.02em;
+}
+h1 .accent{background:var(--green-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.subtitle{font-size:1.05rem;color:var(--slate-600);max-width:760px;margin:0 auto}
+.mode-switch{
+  display:flex;gap:8px;justify-content:center;margin:24px 0;
+  background:white;padding:6px;border-radius:999px;
+  box-shadow:var(--shadow-sm);max-width:480px;margin-left:auto;margin-right:auto;
+  border:1px solid var(--slate-200);
+}
+.mode-btn{
+  flex:1;padding:10px 16px;border:none;background:transparent;
+  font-weight:600;font-size:.92rem;cursor:pointer;border-radius:999px;
+  color:var(--slate-600);transition:all .2s;
+}
+.mode-btn.active{background:var(--green-grad);color:white;box-shadow:var(--shadow-sm)}
+.card{
+  background:white;border-radius:var(--radius-lg);padding:24px;
+  margin-bottom:20px;box-shadow:var(--shadow);border:1px solid var(--slate-200);
+}
+.card h2{
+  font-size:1.25rem;color:var(--emerald-800);margin-bottom:8px;
+  display:flex;align-items:center;gap:10px;
+}
+.card .icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;background:var(--emerald-100);color:var(--emerald-700);
+  border-radius:10px;font-size:1.1rem;font-weight:700;
+}
+.card .description{color:var(--slate-600);font-size:.9rem;margin-bottom:16px}
+.protocol{
+  background:var(--slate-50);border-left:3px solid var(--emerald-500);
+  padding:12px 16px;border-radius:8px;font-size:.88rem;margin-bottom:16px;
+}
+.protocol summary{cursor:pointer;font-weight:600;color:var(--emerald-800);user-select:none}
+.protocol[open] summary{margin-bottom:8px}
+.protocol ol,.protocol ul{margin-left:20px;margin-top:8px}
+.protocol li{margin-bottom:4px;color:var(--slate-700)}
+.field-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;
+}
+@media(max-width:640px){.field-row{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:.85rem;color:var(--slate-700)}
+.field input,.field select{
+  padding:10px 12px;border:1px solid var(--slate-300);border-radius:8px;
+  font-size:.95rem;font-family:inherit;background:white;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus,.field select:focus{
+  outline:none;border-color:var(--emerald-500);
+  box-shadow:0 0 0 3px rgba(16,185,129,.15);
+}
+.field .hint{font-size:.78rem;color:var(--slate-500);margin-top:2px}
+.skip-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.skip-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--emerald-600)}
+.skip-row label{font-weight:500;font-size:.85rem;color:var(--slate-600);cursor:pointer}
+.pro-only{display:none}
+.pro-mode .pro-only{display:block}
+.bio-toggle{
+  display:flex;align-items:center;gap:10px;
+  background:var(--emerald-50);border:1px dashed var(--emerald-400);
+  padding:12px 16px;border-radius:10px;cursor:pointer;font-weight:600;
+  color:var(--emerald-800);transition:all .2s;
+  margin-bottom:16px;user-select:none;
+}
+.bio-toggle:hover{background:var(--emerald-100)}
+.bio-toggle input{accent-color:var(--emerald-600);width:18px;height:18px}
+.bio-section{display:none}
+.bio-active .bio-section{display:block}
+.actions{
+  display:flex;gap:12px;justify-content:center;margin:32px 0;flex-wrap:wrap;
+}
+.btn{
+  padding:12px 28px;border:none;border-radius:999px;font-weight:600;
+  font-size:.95rem;cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.btn-primary{background:var(--green-grad);color:white;box-shadow:var(--shadow)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.btn-ghost{background:white;color:var(--slate-700);border:1px solid var(--slate-300)}
+.btn-ghost:hover{background:var(--slate-50)}
+#results{display:none}
+#results.visible{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.score-hero{
+  background:var(--green-grad);color:white;border-radius:var(--radius-lg);
+  padding:32px 24px;text-align:center;box-shadow:var(--shadow-lg);margin-bottom:20px;
+}
+.score-hero .score-label{
+  font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;opacity:.9;margin-bottom:6px
+}
+.score-hero .score-value{font-size:4rem;font-weight:800;line-height:1;margin-bottom:8px}
+.score-hero .score-cat{font-size:1.1rem;opacity:.95;font-weight:500}
+.hale-block{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;
+}
+@media(max-width:640px){.hale-block{grid-template-columns:1fr}}
+.hale-tile{
+  background:rgba(255,255,255,.15);padding:14px 12px;border-radius:10px;
+  text-align:center;backdrop-filter:blur(8px);
+}
+.hale-tile .tile-label{font-size:.72rem;opacity:.85;letter-spacing:.05em;text-transform:uppercase}
+.hale-tile .tile-value{font-size:1.4rem;font-weight:700;margin-top:4px}
+.hale-tile .tile-sub{font-size:.72rem;opacity:.8;margin-top:2px}
+.markers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.marker-tile{
+  background:var(--slate-50);border:1px solid var(--slate-200);border-radius:var(--radius);
+  padding:14px;position:relative;overflow:hidden;
+}
+.marker-tile.skipped{opacity:.55}
+.marker-tile h3{font-size:.92rem;color:var(--slate-800);margin-bottom:6px;font-weight:700}
+.marker-tile .marker-value{font-size:1.15rem;font-weight:700;color:var(--emerald-700);margin-bottom:4px}
+.marker-tile .marker-norm{font-size:.72rem;color:var(--slate-500);margin-bottom:6px}
+.marker-tile .marker-score{
+  display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:600;
+  background:var(--emerald-100);color:var(--emerald-800);
+}
+.marker-tile.low .marker-score{background:#fee2e2;color:#991b1b}
+.marker-tile.mid .marker-score{background:#fef3c7;color:#92400e}
+.marker-tile.high .marker-score{background:#d1fae5;color:#065f46}
+.marker-tile .marker-bar{
+  position:absolute;bottom:0;left:0;height:3px;background:var(--green-grad);transition:width .4s
+}
+.lifestyle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px}
+.lifestyle-tile{
+  background:white;border:1px solid var(--slate-200);border-radius:10px;
+  padding:10px 12px;font-size:.84rem;display:flex;justify-content:space-between;align-items:center;
+}
+.lifestyle-tile.pos{border-color:var(--emerald-300, #6ee7b7);background:#f0fdf4}
+.lifestyle-tile.neg{border-color:#fecaca;background:#fef2f2}
+.lifestyle-tile .lt-label{color:var(--slate-700);font-weight:500}
+.lifestyle-tile .lt-val{font-weight:700}
+.lifestyle-tile .lt-val.pos{color:var(--emerald-700)}
+.lifestyle-tile .lt-val.neg{color:#b91c1c}
+.reco-list{list-style:none;padding:0;margin:0}
+.reco-list li{
+  background:var(--slate-50);border-left:3px solid var(--emerald-500);
+  padding:10px 14px;margin-bottom:8px;border-radius:8px;font-size:.92rem;color:var(--slate-700);
+}
+.reco-list li strong{color:var(--emerald-800)}
+.disclaimer{
+  background:#fffbeb;border:1px solid var(--amber-400);color:#78350f;
+  padding:14px 18px;border-radius:10px;font-size:.86rem;margin:20px 0;
+}
+footer{margin-top:32px;text-align:center;font-size:.82rem;color:var(--slate-500);padding:24px 0}
+footer .brand{color:var(--emerald-700);font-weight:600}
+footer a{color:var(--emerald-700);text-decoration:none}
+footer details{margin:14px auto;max-width:780px;text-align:left;background:white;
+  padding:12px 16px;border-radius:8px;border:1px solid var(--slate-200);}
+footer details summary{cursor:pointer;font-weight:600;color:var(--slate-700)}
+footer details ul{margin:8px 0 0 20px;font-size:.78rem;color:var(--slate-600)}
+footer details li{margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <span class="badge">NutricellScience · HALE-Hybrid v1.0.0</span>
+  <h1>Calculateur HALE <span class="accent">Hybrid</span></h1>
+  <p class="subtitle">Estimation de votre espérance de vie en bonne santé combinant <strong>capacités physiques fonctionnelles</strong> (VO2max, pompes, handgrip, équilibre…) et <strong>mode de vie / biomarqueurs</strong> à plus fort pouvoir prédictif (HR mortalité &gt; 1,5). Conforme aux références INSEE 2023.</p>
+</header>
+
+<div class="mode-switch">
+  <button class="mode-btn active" data-mode="public">Mode public</button>
+  <button class="mode-btn" data-mode="pro">Mode sportif / pro</button>
+</div>
+
+<!-- =================== IDENTITÉ =================== -->
+<div class="card" id="card-identity">
+  <h2><span class="icon">①</span> Identité &amp; morphologie</h2>
+  <p class="description">Sexe, âge, taille, poids et tour de taille sont indispensables pour calibrer les normes et calculer l'IMC + WHtR (Ashwell — meilleur prédicteur que l'IMC seul pour le risque cardiométabolique).</p>
+  <div class="field-row">
+    <div class="field">
+      <label>Sexe biologique <span style="color:#dc2626">*</span></label>
+      <select id="sex">
+        <option value="">— Sélectionner —</option>
+        <option value="M">Homme</option>
+        <option value="F">Femme</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Âge (ans) <span style="color:#dc2626">*</span></label>
+      <input id="age" type="number" min="18" max="99" placeholder="ex. 42">
+      <span class="hint">Validé pour 18–99 ans</span>
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Taille (cm)</label>
+      <input id="height" type="number" min="120" max="220" placeholder="ex. 175">
+    </div>
+    <div class="field">
+      <label>Poids (kg)</label>
+      <input id="weight" type="number" min="30" max="200" step="0.1" placeholder="ex. 72">
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Tour de taille (cm)</label>
+      <input id="waist" type="number" min="40" max="200" placeholder="ex. 84">
+      <span class="hint">Mesuré au nombril, sans serrer (WHtR optimal &lt;0,5)</span>
+    </div>
+  </div>
+</div>
+
+<!-- =================== CAPACITÉS PHYSIQUES =================== -->
+<div class="card">
+  <h2><span class="icon">②</span> Capacités physiques fonctionnelles</h2>
+  <p class="description">6 tests à plus fort pouvoir prédictif de mortalité (HR documenté ≥ 1,5). Vous pouvez en sauter — le score s'adapte automatiquement aux mesures fournies (renormalisation des poids).</p>
+
+  <!-- VO2max -->
+  <details class="protocol">
+    <summary>A — VO2max (HR mortalité jusqu'à 5,04 — Mandsager 2018)</summary>
+    <ol>
+      <li><strong>Méthode directe :</strong> test à l'effort avec mesure VO2 (ml/kg/min)</li>
+      <li><strong>Test de Cooper :</strong> distance parcourue en course continue pendant 12 min sur piste</li>
+      <li><strong>Step Test (Tecumseh) :</strong> monter/descendre marche 20 cm pendant 3 min puis mesurer FC à 30 s post-effort</li>
+    </ol>
+  </details>
+  <div class="field-row">
+    <div class="field">
+      <label>Méthode</label>
+      <select id="vo2-method">
+        <option value="">— Sélectionner —</option>
+        <option value="direct">Mesure directe (VO2max)</option>
+        <option value="cooper">Test de Cooper (12 min)</option>
+        <option value="step">Step Test (FC récupération)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Valeur</label>
+      <input id="vo2-value" type="number" step="0.1" placeholder="ex. 42">
+      <span class="hint" id="vo2-hint">Saisir selon la méthode choisie</span>
+    </div>
+  </div>
+  <div class="skip-row"><input type="checkbox" id="vo2-skip"><label for="vo2-skip">Je n'ai pas mesuré ce marqueur</label></div>
+
+  <!-- Pompes -->
+  <details class="protocol" style="margin-top:16px">
+    <summary>B — Pompes max (HR 0,04 si ≥40 — Yang 2019, hommes 40+)</summary>
+    <p>Pompes complètes standard, position basse poitrine près du sol, sans pause &gt; 5 s. Comptez le maximum jusqu'à arrêt.</p>
+  </details>
+  <div class="field-row">
+    <div class="field">
+      <label>Nombre max de pompes</label>
+      <input id="pushups" type="number" min="0" max="200" placeholder="ex. 25">
+    </div>
+  </div>
+  <div class="skip-row"><input type="checkbox" id="pushups-skip"><label for="pushups-skip">Sauter ce test</label></div>
+
+  <!-- Handgrip -->
+  <details class="protocol" style="margin-top:16px">
+    <summary>C — Force préhension (HR 1,16 par −5 kg — Leong 2015, PURE study)</summary>
+    <p>Dynamomètre type Jamar, position assise/debout. 3 essais main dominante, retenir le meilleur. Sans dynamo : impossible à estimer fiablement.</p>
+  </details>
+  <div class="field-row">
+    <div class="field">
+      <label>Handgrip main dominante (kg)</label>
+      <input id="grip" type="number" step="0.5" min="0" max="100" placeholder="ex. 42">
+    </div>
+  </div>
+  <div class="skip-row"><input type="checkbox" id="grip-skip"><label for="grip-skip">Sauter ce test</label></div>
+
+  <!-- Vitesse de marche -->
+  <details class="protocol" style="margin-top:16px">
+    <summary>D — Vitesse de marche (HR 1,90 si &lt;0,8 m/s ≥65 ans — Studenski 2011)</summary>
+    <p>Marquer 10 mètres au sol. Démarrage 2 m avant, chronométrer les 4 mètres centraux (vitesse confortable, pas de course). Vitesse = 4 m / temps (s).</p>
+  </details>
+  <div class="field-row">
+    <div class="field">
+      <label>Vitesse de marche (m/s)</label>
+      <input id="gait" type="number" step="0.01" min="0" max="3" placeholder="ex. 1.30">
+    </div>
+  </div>
+  <div class="skip-row"><input type="checkbox" id="gait-skip"><label for="gait-skip">Sauter ce test</label></div>
+
+  <!-- Sit-to-stand -->
+  <details class="protocol" style="margin-top:16px">
+    <summary>E — Sit-to-Stand 30s (Rikli-Jones, marqueur sarcopénie)</summary>
+    <p>Chaise standard (43 cm), bras croisés sur poitrine. Compter le nombre de levers debout-assis complets en 30 secondes.</p>
+  </details>
+  <div class="field-row">
+    <div class="field">
+      <label>Nombre de levers en 30 s</label>
+      <input id="sts" type="number" min="0" max="60" placeholder="ex. 20">
+    </div>
+  </div>
+  <div class="skip-row"><input type="checkbox" id="sts-skip"><label for="sts-skip">Sauter ce test</label></div>
+
+  <!-- Équilibre -->
+  <details class="protocol" style="margin-top:16px">
+    <summary>F — Équilibre yeux fermés (HR 2,7 si &lt;10s ≥51 ans — Araujo 2022)</summary>
+    <p>Pieds joints, bras le long du corps, yeux fermés. Chronométrer jusqu'à perte d'équilibre (max 30 s).</p>
+  </details>
+  <div class="field-row">
+    <div class="field">
+      <label>Tenue équilibre yeux fermés (s)</label>
+      <input id="balance" type="number" step="0.1" min="0" max="60" placeholder="ex. 12">
+    </div>
+  </div>
+  <div class="skip-row"><input type="checkbox" id="balance-skip"><label for="balance-skip">Sauter ce test</label></div>
+
+  <!-- Mode sportif -->
+  <div class="pro-only" style="margin-top:20px;padding-top:16px;border-top:2px dashed var(--emerald-300, #6ee7b7)">
+    <h3 style="font-size:1rem;color:var(--emerald-700);margin-bottom:6px">Marqueurs sportifs / CrossFit (optionnels)</h3>
+    <p class="description">Bonus +1 à +4 points sur le score composite si forte performance, malus possible si très faible.</p>
+    <div class="field-row">
+      <div class="field">
+        <label>Back Squat 1RM relatif (×bodyweight)</label>
+        <input id="squat-1rm" type="number" step="0.05" min="0" max="5" placeholder="ex. 1.5">
+        <span class="hint">≥1,5×BW excellent ; ≥2×BW élite</span>
+      </div>
+      <div class="field">
+        <label>Murph (temps en min, sub-60 = compétitif)</label>
+        <input id="murph" type="number" step="0.1" min="0" max="120" placeholder="ex. 48">
+        <span class="hint">1 mile + 100 pull-ups + 200 push-ups + 300 squats + 1 mile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== MODE DE VIE =================== -->
+<div class="card">
+  <h2><span class="icon">③</span> Mode de vie</h2>
+  <p class="description">5 variables lifestyle à plus fort pouvoir prédictif. Chacune ajuste directement le ΔHALE en années.</p>
+  <div class="field-row">
+    <div class="field">
+      <label>Statut tabagique</label>
+      <select id="smoking">
+        <option value="">— Sélectionner —</option>
+        <option value="never">Jamais fumé</option>
+        <option value="former">Ex-fumeur (&gt;5 ans)</option>
+        <option value="light">Fumeur léger (1-10/j)</option>
+        <option value="heavy">Fumeur ≥10/jour</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Alcool (verres/semaine)</label>
+      <input id="alcohol" type="number" min="0" max="100" step="0.5" placeholder="ex. 4">
+      <span class="hint">1 verre = 10 g d'alcool pur</span>
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Sommeil moyen (h/nuit)</label>
+      <input id="sleep" type="number" step="0.5" min="3" max="12" placeholder="ex. 7.5">
+      <span class="hint">Optimum : 7-8 h</span>
+    </div>
+    <div class="field">
+      <label>Activité physique habituelle</label>
+      <select id="activity">
+        <option value="">— Sélectionner —</option>
+        <option value="sedentary">Sédentaire (&lt;1h/sem)</option>
+        <option value="light">Légère (1-3h/sem)</option>
+        <option value="moderate">Modérée (≥150 min/sem OMS)</option>
+        <option value="high">Élevée (5-7h/sem)</option>
+        <option value="athlete">Athlétique (≥8h/sem)</option>
+      </select>
+      <span class="hint">Ajustement si VO2max non renseigné</span>
+    </div>
+  </div>
+</div>
+
+<!-- =================== BIOMARQUEURS (TOGGLE) =================== -->
+<div class="card">
+  <h2><span class="icon">④</span> Biomarqueurs sanguins (optionnels)</h2>
+  <label class="bio-toggle" for="bio-toggle">
+    <input type="checkbox" id="bio-toggle">
+    J'ai mes analyses de sang récentes (active 3 marqueurs cardiométaboliques majeurs)
+  </label>
+  <div class="bio-section">
+    <p class="description">Variables avec HR mortalité élevé : ApoB (athérosclérose), hs-CRP (inflammation systémique), TA systolique (HTA).</p>
+    <div class="field-row">
+      <div class="field">
+        <label>ApoB (mg/dL)</label>
+        <input id="apob" type="number" min="20" max="250" placeholder="ex. 85">
+        <span class="hint">Cible &lt;90 ; optimal &lt;70</span>
+      </div>
+      <div class="field">
+        <label>hs-CRP (mg/L)</label>
+        <input id="hscrp" type="number" step="0.1" min="0" max="50" placeholder="ex. 0.8">
+        <span class="hint">Optimal &lt;1,0 ; risque ≥3</span>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Tension systolique (mmHg)</label>
+        <input id="sbp" type="number" min="80" max="220" placeholder="ex. 122">
+        <span class="hint">Optimal &lt;120 ; HTA ≥140</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ACTIONS =================== -->
+<div class="actions">
+  <button class="btn btn-primary" id="btn-compute">Calculer mon HALE-Hybrid</button>
+  <button class="btn btn-ghost" id="btn-reset">Réinitialiser</button>
+</div>
+
+<!-- =================== RÉSULTATS =================== -->
+<div id="results">
+  <div class="score-hero">
+    <div class="score-label">Score composite physique</div>
+    <div class="score-value" id="score-value">—</div>
+    <div class="score-cat" id="score-cat">—</div>
+    <div class="hale-block">
+      <div class="hale-tile">
+        <div class="tile-label">HALE estimé</div>
+        <div class="tile-value" id="hale-est">—</div>
+        <div class="tile-sub" id="hale-delta">—</div>
+      </div>
+      <div class="hale-tile">
+        <div class="tile-label">Réf. INSEE 2023</div>
+        <div class="tile-value" id="hale-ref">—</div>
+        <div class="tile-sub">à 65 ans (EVSI)</div>
+      </div>
+      <div class="hale-tile">
+        <div class="tile-label">HR mortalité estimé</div>
+        <div class="tile-value" id="hr-est">—</div>
+        <div class="tile-sub">vs population médiane</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">📊</span> Détail par marqueur physique</h2>
+    <div class="markers-grid" id="markers-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">⚖️</span> Modificateurs mode de vie &amp; biomarqueurs</h2>
+    <p class="description">Impact en années (cumul plafonné [-15, +12 ans]).</p>
+    <div class="lifestyle-grid" id="lifestyle-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">💡</span> Recommandations personnalisées</h2>
+    <ul class="reco-list" id="reco-list"></ul>
+  </div>
+
+  <div class="disclaimer">
+    <strong>⚠️ Avertissement méthodologique :</strong> La conversion vers une espérance de vie individuelle est une <strong>modélisation</strong> (incertitude ±5 à 8 ans). Outil d'auto-évaluation et de motivation, ne remplace pas un avis médical. Validé statistiquement pour 18–99 ans, population européenne/française.
+  </div>
+</div>
+
+<footer>
+  <p>Conçu par <span class="brand">NutricellScience</span> · <a href="https://nutricellscience.blog" target="_blank" rel="noopener">nutricellscience.blog</a> · Signature <strong>Mark DOWN</strong></p>
+  <p style="margin-top:8px">Outil scientifique en libre accès — Code source <a href="https://github.com/JETPOD/hale-hybrid" target="_blank" rel="noopener">GitHub</a> · v1.0.0 · MAJ mai 2026</p>
+  <details>
+    <summary>Références scientifiques principales</summary>
+    <ul>
+      <li>Mandsager K, et al. <em>JAMA Netw Open</em> 2018 — VO2max et mortalité (HR jusqu'à 5,04)</li>
+      <li>Yang J, et al. <em>JAMA Netw Open</em> 2019 — Pompes ≥40 et risque CV chez l'homme</li>
+      <li>Leong DP, et al. <em>Lancet</em> 2015 (PURE) — Handgrip et mortalité toutes causes</li>
+      <li>Studenski S, et al. <em>JAMA</em> 2011 — Vitesse de marche et survie ≥65 ans</li>
+      <li>Rikli RE, Jones CJ. <em>JAPA</em> 1999 — Senior Fitness Test (sit-to-stand)</li>
+      <li>Araújo CG, et al. <em>Br J Sports Med</em> 2022 — Équilibre unipodal et mortalité</li>
+      <li>Sniderman AD, et al. <em>JAMA Cardiol</em> 2019 — ApoB et MCV</li>
+      <li>Ridker PM. <em>Lancet</em> 2018 — hs-CRP et inflammation</li>
+      <li>Ashwell M, et al. <em>Obes Rev</em> 2012 — WHtR vs IMC</li>
+      <li>INSEE 2023 / DREES 2024 — Espérance de vie en bonne santé France</li>
+    </ul>
+  </details>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+// =================== NORMES (issues du rapport scientifique HALE-Physical) ===================
+
+// A. VO2max — Kaminsky/FRIEND
+const VO2_NORMS = {
+  M: [
+    {min:18,max:29, p10:35.2, p50:48.0, p90:60.0},
+    {min:30,max:39, p10:33.0, p50:45.0, p90:57.0},
+    {min:40,max:49, p10:30.8, p50:42.0, p90:54.0},
+    {min:50,max:59, p10:27.7, p50:38.0, p90:50.0},
+    {min:60,max:69, p10:23.6, p50:33.0, p90:45.0},
+    {min:70,max:99, p10:19.8, p50:28.0, p90:38.0}
+  ],
+  F: [
+    {min:18,max:29, p10:27.0, p50:38.0, p90:48.0},
+    {min:30,max:39, p10:25.0, p50:35.0, p90:45.0},
+    {min:40,max:49, p10:22.7, p50:32.0, p90:41.0},
+    {min:50,max:59, p10:20.5, p50:28.0, p90:37.0},
+    {min:60,max:69, p10:18.0, p50:24.0, p90:32.0},
+    {min:70,max:99, p10:15.6, p50:21.0, p90:28.0}
+  ]
+};
+
+// B. Pompes — Yang 2019 + adaptations
+const PUSHUPS_NORMS = {
+  M: [
+    {min:18,max:29, p10:15, p50:30, p90:55},
+    {min:30,max:39, p10:12, p50:25, p90:46},
+    {min:40,max:49, p10:8,  p50:20, p90:40},
+    {min:50,max:59, p10:6,  p50:15, p90:33},
+    {min:60,max:69, p10:4,  p50:10, p90:25},
+    {min:70,max:99, p10:2,  p50:8,  p90:18}
+  ],
+  F: [
+    {min:18,max:29, p10:7,  p50:15, p90:33},
+    {min:30,max:39, p10:5,  p50:13, p90:28},
+    {min:40,max:49, p10:3,  p50:10, p90:24},
+    {min:50,max:59, p10:2,  p50:8,  p90:20},
+    {min:60,max:69, p10:1,  p50:5,  p90:15},
+    {min:70,max:99, p10:0,  p50:3,  p90:10}
+  ]
+};
+
+// C. Handgrip — Dodds 2014 / PURE
+const GRIP_NORMS = {
+  M: [
+    {min:18,max:24, p10:36.5, p50:48.0, p90:60.4},
+    {min:25,max:29, p10:38.0, p50:49.0, p90:61.6},
+    {min:30,max:34, p10:39.4, p50:50.8, p90:62.5},
+    {min:35,max:39, p10:40.3, p50:51.7, p90:63.1},
+    {min:40,max:44, p10:40.4, p50:51.3, p90:62.9},
+    {min:45,max:49, p10:39.8, p50:50.8, p90:61.5},
+    {min:50,max:54, p10:38.7, p50:49.3, p90:60.1},
+    {min:55,max:59, p10:36.9, p50:47.6, p90:57.8},
+    {min:60,max:64, p10:35.2, p50:45.3, p90:55.3},
+    {min:65,max:69, p10:33.6, p50:43.3, p90:52.8},
+    {min:70,max:99, p10:31.9, p50:41.3, p90:50.7}
+  ],
+  F: [
+    {min:18,max:24, p10:23.4, p50:30.4, p90:37.6},
+    {min:25,max:29, p10:24.2, p50:31.0, p90:38.4},
+    {min:30,max:34, p10:24.7, p50:31.9, p90:39.0},
+    {min:35,max:39, p10:25.1, p50:32.5, p90:39.5},
+    {min:40,max:44, p10:25.3, p50:32.3, p90:39.6},
+    {min:45,max:49, p10:24.9, p50:31.9, p90:39.0},
+    {min:50,max:54, p10:23.4, p50:30.6, p90:37.5},
+    {min:55,max:59, p10:22.7, p50:29.3, p90:35.8},
+    {min:60,max:64, p10:21.8, p50:28.0, p90:34.3},
+    {min:65,max:69, p10:20.7, p50:26.8, p90:32.9},
+    {min:70,max:99, p10:19.9, p50:25.9, p90:31.4}
+  ]
+};
+
+// D. Vitesse de marche
+const GAIT_NORMS = {
+  M: [
+    {min:18,max:39, p10:1.20, p50:1.45, p90:1.60},
+    {min:40,max:49, p10:1.15, p50:1.40, p90:1.55},
+    {min:50,max:59, p10:1.10, p50:1.35, p90:1.50},
+    {min:60,max:69, p10:1.05, p50:1.30, p90:1.45},
+    {min:70,max:79, p10:0.85, p50:1.13, p90:1.40},
+    {min:80,max:99, p10:0.60, p50:0.94, p90:1.30}
+  ],
+  F: [
+    {min:18,max:39, p10:1.10, p50:1.35, p90:1.50},
+    {min:40,max:49, p10:1.05, p50:1.30, p90:1.45},
+    {min:50,max:59, p10:1.00, p50:1.25, p90:1.40},
+    {min:60,max:69, p10:0.95, p50:1.20, p90:1.35},
+    {min:70,max:79, p10:0.85, p50:1.26, p90:1.40},
+    {min:80,max:99, p10:0.55, p50:0.97, p90:1.25}
+  ]
+};
+
+// E. Sit-to-Stand 30s
+const STS_NORMS = {
+  M: [
+    {min:18,max:59, p10:16, p50:24, p90:32},
+    {min:60,max:64, p10:9,  p50:16, p90:23},
+    {min:65,max:69, p10:8,  p50:15, p90:23},
+    {min:70,max:74, p10:8,  p50:14, p90:21},
+    {min:75,max:79, p10:7,  p50:14, p90:21},
+    {min:80,max:84, p10:6,  p50:12, p90:19},
+    {min:85,max:99, p10:4,  p50:11, p90:19}
+  ],
+  F: [
+    {min:18,max:59, p10:14, p50:22, p90:30},
+    {min:60,max:64, p10:8,  p50:15, p90:21},
+    {min:65,max:69, p10:8,  p50:14, p90:19},
+    {min:70,max:74, p10:7,  p50:13, p90:19},
+    {min:75,max:79, p10:6,  p50:12, p90:19},
+    {min:80,max:84, p10:4,  p50:11, p90:18},
+    {min:85,max:99, p10:4,  p50:10, p90:17}
+  ]
+};
+
+// F. Équilibre yeux fermés
+const BALANCE_NORMS = {
+  M: [
+    {min:18,max:39, p10:1,   p50:10,  p90:25},
+    {min:40,max:49, p10:1,   p50:7,   p90:20},
+    {min:50,max:59, p10:0.5, p50:4.5, p90:15},
+    {min:60,max:69, p10:0,   p50:3,   p90:10},
+    {min:70,max:79, p10:0,   p50:2,   p90:5},
+    {min:80,max:99, p10:0,   p50:1.3, p90:3}
+  ],
+  F: [
+    {min:18,max:39, p10:1,   p50:8.5, p90:20},
+    {min:40,max:49, p10:1,   p50:7,   p90:20},
+    {min:50,max:59, p10:0.5, p50:5,   p90:14},
+    {min:60,max:69, p10:0,   p50:2.5, p90:6},
+    {min:70,max:79, p10:0,   p50:2.2, p90:6},
+    {min:80,max:99, p10:0,   p50:1.4, p90:3}
+  ]
+};
+
+// HALE FR 2023 — EVSI INSEE
+const HALE_REF = { M: 63.7, F: 64.1 };
+
+// =================== HELPERS ===================
+
+function ageBracket(age, brackets){
+  for(const b of brackets){ if(age >= b.min && age <= b.max) return b; }
+  return brackets[brackets.length-1];
+}
+function vo2FromCooper(distM){ return (distM - 504.9) / 44.73; }
+function vo2FromStep(hrRecov, sex){
+  return sex==='M' ? 111.33 - 0.42*hrRecov : 65.81 - 0.1847*hrRecov;
+}
+function normalizeScore(value, p10, p90){
+  if(p90 <= p10) return 50;
+  const s = ((value - p10) / (p90 - p10)) * 100;
+  return Math.max(0, Math.min(100, s));
+}
+function getVal(id){ const e=document.getElementById(id); return e ? e.value : ''; }
+function getNum(id){ const v=parseFloat(getVal(id)); return isNaN(v) ? null : v; }
+function isSkipped(id){ const e=document.getElementById(id); return e ? e.checked : false; }
+function hasVal(v){ return v !== null && v !== undefined && v !== '' && !(typeof v === 'number' && isNaN(v)); }
+
+// Pondération adaptative selon l'âge (somme = 1)
+function computeWeights(age){
+  if(age >= 60){
+    // priorité gérontologique : VO2max, handgrip, vitesse marche, sit-to-stand, équilibre
+    return { A:0.28, B:0.10, C:0.20, D:0.17, E:0.15, F:0.10 };
+  }
+  // adulte jeune : VO2max, pompes, handgrip, sit-to-stand
+  return { A:0.30, B:0.20, C:0.20, D:0.05, E:0.15, F:0.10 };
+}
+
+function categoryFromScore(s){
+  if(s >= 85) return { label:"Performance physique exceptionnelle", tier:"Élite" };
+  if(s >= 70) return { label:"Très bonne capacité fonctionnelle", tier:"Excellent" };
+  if(s >= 55) return { label:"Bonne capacité fonctionnelle", tier:"Bon" };
+  if(s >= 40) return { label:"Capacité fonctionnelle moyenne", tier:"Moyen" };
+  if(s >= 25) return { label:"Capacité inférieure à la moyenne", tier:"Sous moyenne" };
+  if(s >= 10) return { label:"Capacité fonctionnelle faible", tier:"Faible" };
+  return { label:"Capacité fonctionnelle très faible", tier:"Critique" };
+}
+
+// Conversion score physique → ΔHALE en années
+function deltaHaleFromScore(s){
+  if(s >= 85) return 10;
+  if(s >= 70) return 6;
+  if(s >= 55) return 0;
+  if(s >= 40) return -3;
+  if(s >= 25) return -6;
+  if(s >= 10) return -10;
+  return -13.5;
+}
+
+function hrFromScore(s){
+  if(s >= 85) return 0.4;
+  if(s >= 70) return 0.7;
+  if(s >= 55) return 1.0;
+  if(s >= 40) return 1.2;
+  if(s >= 25) return 1.7;
+  if(s >= 10) return 2.5;
+  return 3.5;
+}
+
+// =================== MODE DE VIE + BIOMARQUEURS ===================
+
+function computeLifestyleModifiers(d){
+  const items = [];
+
+  // Tabac (HR 1,8-2,5 fumeur actif)
+  if(hasVal(d.smoking)){
+    let v = 0, label = '';
+    if(d.smoking === 'never'){ v = 2.5; label = 'Jamais fumé'; }
+    else if(d.smoking === 'former'){ v = 1.0; label = 'Ex-fumeur'; }
+    else if(d.smoking === 'light'){ v = -3.0; label = 'Fumeur léger'; }
+    else if(d.smoking === 'heavy'){ v = -6.0; label = 'Fumeur ≥10/j'; }
+    items.push({ key:'smoking', label:'Tabac — '+label, value:v });
+  }
+
+  // IMC
+  if(hasVal(d.bmi)){
+    let v = 0;
+    if(d.bmi >= 18.5 && d.bmi < 25) v = 1.5;
+    else if(d.bmi >= 25 && d.bmi < 30) v = -0.8;
+    else if(d.bmi >= 30 && d.bmi < 35) v = -2.5;
+    else if(d.bmi >= 35) v = -4.5;
+    else if(d.bmi < 18.5) v = -1.0;
+    items.push({ key:'bmi', label:'IMC ('+d.bmi.toFixed(1)+')', value:v });
+  }
+
+  // WHtR (anti-double-comptage avec IMC ×0.55)
+  if(hasVal(d.waist) && hasVal(d.heightM) && d.heightM > 0){
+    const whtr = d.waist / (d.heightM * 100);
+    let v = 0;
+    if(whtr < 0.43) v = -0.3;
+    else if(whtr < 0.50) v = 1.2;
+    else if(whtr < 0.54) v = 0.2;
+    else if(whtr < 0.58) v = -0.8;
+    else if(whtr < 0.63) v = -2.0;
+    else v = -3.0;
+    if(hasVal(d.bmi) && d.bmi > 0) v = v * 0.55;
+    v = Math.max(-1.5, Math.min(1.5, v));
+    items.push({ key:'whtr', label:'Tour taille/taille ('+whtr.toFixed(2)+')', value:v });
+  }
+
+  // Sommeil
+  if(hasVal(d.sleep)){
+    const dev = d.sleep - 7;
+    let v;
+    if(Math.abs(dev) <= 0.5) v = 1.0;
+    else if(dev < 0) v = Math.max(-3.0, -1.2 * Math.abs(dev));
+    else v = Math.max(-3.5, -1.5 * dev);
+    items.push({ key:'sleep', label:'Sommeil ('+d.sleep+'h)', value:v });
+  }
+
+  // Alcool
+  if(hasVal(d.alcohol)){
+    let v;
+    if(d.alcohol <= 7) v = 0.5;
+    else if(d.alcohol <= 14) v = -0.5;
+    else if(d.alcohol <= 21) v = -1.5;
+    else v = -3.0;
+    items.push({ key:'alcohol', label:'Alcool ('+d.alcohol+'/sem)', value:v });
+  }
+
+  // Activité physique (modificateur léger — déjà partiellement capté par VO2max)
+  if(hasVal(d.activity)){
+    const actMap = { sedentary:-1.5, light:-0.3, moderate:1.0, high:1.5, athlete:1.8 };
+    const actLabel = { sedentary:'Sédentaire', light:'Légère', moderate:'Modérée', high:'Élevée', athlete:'Athlétique' };
+    // Si VO2max renseigné, on réduit l'impact pour éviter double comptage
+    let v = actMap[d.activity];
+    if(d.vo2maxKnown) v = v * 0.4;
+    if(v !== undefined) items.push({ key:'activity', label:'Activité ('+actLabel[d.activity]+')', value:v });
+  }
+
+  return items;
+}
+
+function computeBioModifiers(d){
+  const items = [];
+  // ApoB
+  if(hasVal(d.apob)){
+    let v = 0;
+    if(d.apob < 70) v = 1.2;
+    else if(d.apob < 90) v = 0.5;
+    else if(d.apob < 110) v = -0.5;
+    else if(d.apob < 130) v = -1.5;
+    else v = -2.8;
+    items.push({ key:'apob', label:'ApoB ('+d.apob+' mg/dL)', value:v });
+  }
+  // hs-CRP
+  if(hasVal(d.hscrp)){
+    let v;
+    if(d.hscrp < 0.5) v = 1.0;
+    else if(d.hscrp < 1.0) v = 0.3;
+    else if(d.hscrp < 3.0) v = -0.8;
+    else v = -2.0;
+    items.push({ key:'hscrp', label:'hs-CRP ('+d.hscrp+' mg/L)', value:v });
+  }
+  // TA systolique
+  if(hasVal(d.sbp)){
+    let v;
+    if(d.sbp < 120) v = 0.5;
+    else if(d.sbp < 130) v = 0;
+    else if(d.sbp < 140) v = -0.8;
+    else if(d.sbp < 160) v = -2.0;
+    else v = -3.5;
+    items.push({ key:'sbp', label:'TA systolique ('+d.sbp+' mmHg)', value:v });
+  }
+  return items;
+}
+
+// =================== INTERACTIONS UI ===================
+
+const modeButtons = document.querySelectorAll('.mode-btn');
+let currentMode = 'public';
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    document.body.classList.toggle('pro-mode', currentMode === 'pro');
+  });
+});
+
+const bioToggle = document.getElementById('bio-toggle');
+bioToggle.addEventListener('change', () => {
+  document.body.classList.toggle('bio-active', bioToggle.checked);
+});
+
+const vo2Method = document.getElementById('vo2-method');
+const vo2Hint = document.getElementById('vo2-hint');
+vo2Method.addEventListener('change', () => {
+  const v = vo2Method.value;
+  if(v === 'direct') vo2Hint.textContent = 'VO2max en ml/kg/min (ex. 42)';
+  else if(v === 'cooper') vo2Hint.textContent = 'Distance parcourue en 12 min, en mètres (ex. 2450)';
+  else if(v === 'step') vo2Hint.textContent = 'Fréquence cardiaque récupération en bpm (ex. 140)';
+  else vo2Hint.textContent = 'Saisir la valeur correspondante';
+});
+
+// =================== CALCUL PRINCIPAL ===================
+
+function compute(){
+  const age = getNum('age');
+  const sex = getVal('sex');
+  if(!age || !sex){
+    alert('Merci de renseigner votre âge et votre sexe pour ajuster les normes.');
+    document.getElementById('card-identity').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  if(age < 18 || age > 99){
+    alert('Calculateur validé pour les 18–99 ans.');
+    return;
+  }
+
+  // Identité morphologique
+  const heightCm = getNum('height');
+  const weightKg = getNum('weight');
+  const waist = getNum('waist');
+  const heightM = heightCm ? heightCm / 100 : null;
+  const bmi = (heightM && weightKg) ? weightKg / (heightM * heightM) : null;
+
+  // ---- BLOC PHYSIQUE ----
+  const results = [];
+
+  // A. VO2max
+  if(!isSkipped('vo2-skip') && vo2Method.value && getNum('vo2-value') !== null){
+    const m = vo2Method.value;
+    const raw = getNum('vo2-value');
+    let vo2;
+    if(m === 'direct') vo2 = raw;
+    else if(m === 'cooper') vo2 = vo2FromCooper(raw);
+    else if(m === 'step') vo2 = vo2FromStep(raw, sex);
+    const norm = ageBracket(age, VO2_NORMS[sex]);
+    results.push({ key:'A', name:'VO2max', value: vo2.toFixed(1)+' ml/kg/min',
+      norm:'P10 '+norm.p10.toFixed(1)+' · P50 '+norm.p50.toFixed(1)+' · P90 '+norm.p90.toFixed(1),
+      score: normalizeScore(vo2, norm.p10, norm.p90), raw: vo2 });
+  }
+  // B. Pompes
+  if(!isSkipped('pushups-skip') && getNum('pushups') !== null){
+    const v = getNum('pushups');
+    const norm = ageBracket(age, PUSHUPS_NORMS[sex]);
+    results.push({ key:'B', name:'Pompes max', value: v+' pompes',
+      norm:'P10 '+norm.p10+' · P50 '+norm.p50+' · P90 '+norm.p90,
+      score: normalizeScore(v, norm.p10, norm.p90), raw:v });
+  }
+  // C. Handgrip
+  if(!isSkipped('grip-skip') && getNum('grip') !== null){
+    const v = getNum('grip');
+    const norm = ageBracket(age, GRIP_NORMS[sex]);
+    results.push({ key:'C', name:'Force préhension', value: v.toFixed(1)+' kg',
+      norm:'P10 '+norm.p10.toFixed(1)+' · P50 '+norm.p50.toFixed(1)+' · P90 '+norm.p90.toFixed(1)+' kg',
+      score: normalizeScore(v, norm.p10, norm.p90), raw:v });
+  }
+  // D. Vitesse marche
+  if(!isSkipped('gait-skip') && getNum('gait') !== null){
+    const v = getNum('gait');
+    const norm = ageBracket(age, GAIT_NORMS[sex]);
+    results.push({ key:'D', name:'Vitesse marche', value: v.toFixed(2)+' m/s',
+      norm:'P10 '+norm.p10.toFixed(2)+' · P50 '+norm.p50.toFixed(2)+' · P90 '+norm.p90.toFixed(2),
+      score: normalizeScore(v, norm.p10, norm.p90), raw:v });
+  }
+  // E. Sit-to-Stand
+  if(!isSkipped('sts-skip') && getNum('sts') !== null){
+    const v = getNum('sts');
+    const norm = ageBracket(age, STS_NORMS[sex]);
+    results.push({ key:'E', name:'Sit-to-Stand 30s', value: v+' levers',
+      norm:'P10 '+norm.p10+' · P50 '+norm.p50+' · P90 '+norm.p90,
+      score: normalizeScore(v, norm.p10, norm.p90), raw:v });
+  }
+  // F. Équilibre
+  if(!isSkipped('balance-skip') && getNum('balance') !== null){
+    const v = getNum('balance');
+    const norm = ageBracket(age, BALANCE_NORMS[sex]);
+    results.push({ key:'F', name:'Équilibre yeux fermés', value: v.toFixed(1)+' s',
+      norm:'P10 '+norm.p10+' · P50 '+norm.p50+' · P90 '+norm.p90+' s',
+      score: normalizeScore(v, norm.p10, norm.p90), raw:v });
+  }
+
+  // Score composite physique pondéré
+  let composite = 50;
+  if(results.length > 0){
+    const weights = computeWeights(age);
+    let totalWeight = 0, weighted = 0;
+    for(const r of results){
+      const w = weights[r.key] || 0;
+      weighted += r.score * w;
+      totalWeight += w;
+    }
+    composite = totalWeight > 0 ? weighted / totalWeight : 50;
+    // Ajustement équilibre (Araujo 2022)
+    const balRes = results.find(r => r.key === 'F');
+    if(balRes && balRes.raw < 10) composite = Math.max(0, composite - 7);
+    else if(balRes && balRes.raw >= 30) composite = Math.min(100, composite + 3);
+  }
+
+  // Bonus sportif
+  let proBonus = 0;
+  if(currentMode === 'pro'){
+    const sq = getNum('squat-1rm');
+    const mu = getNum('murph');
+    if(hasVal(sq)){
+      if(sq >= 2.0) proBonus += 4;
+      else if(sq >= 1.5) proBonus += 2.5;
+      else if(sq >= 1.2) proBonus += 1;
+      else if(sq < 0.7) proBonus -= 2;
+    }
+    if(hasVal(mu)){
+      if(mu < 40) proBonus += 4;
+      else if(mu < 50) proBonus += 2.5;
+      else if(mu < 60) proBonus += 1;
+      else if(mu > 90) proBonus -= 1;
+    }
+  }
+  composite = Math.round(Math.max(0, Math.min(100, composite + proBonus)));
+
+  // Catégorie + Δ HALE physique
+  const cat = categoryFromScore(composite);
+  const deltaPhys = deltaHaleFromScore(composite);
+
+  // ---- BLOC LIFESTYLE + BIO ----
+  const lifestyleData = {
+    smoking: getVal('smoking') || null,
+    alcohol: getNum('alcohol'),
+    sleep: getNum('sleep'),
+    activity: getVal('activity') || null,
+    bmi: bmi,
+    waist: waist,
+    heightM: heightM,
+    vo2maxKnown: results.some(r => r.key === 'A')
+  };
+  const bioData = bioToggle.checked ? {
+    apob: getNum('apob'),
+    hscrp: getNum('hscrp'),
+    sbp: getNum('sbp')
+  } : {};
+
+  const lifestyleItems = computeLifestyleModifiers(lifestyleData);
+  const bioItems = computeBioModifiers(bioData);
+  const allMods = [...lifestyleItems, ...bioItems];
+  const sumMods = allMods.reduce((acc, x) => acc + x.value, 0);
+
+  // ---- TOTAL avec rendements décroissants ----
+  let totalDelta = deltaPhys + sumMods;
+  if(Math.abs(totalDelta) > 8){
+    const sign = Math.sign(totalDelta);
+    totalDelta = sign * (8 + (Math.abs(totalDelta) - 8) * 0.5);
+  }
+  totalDelta = Math.max(-15, Math.min(12, totalDelta));
+
+  const haleRef = HALE_REF[sex];
+  const haleEst = haleRef + totalDelta;
+  const hr = hrFromScore(composite);
+
+  // ---- AFFICHAGE ----
+  document.getElementById('score-value').textContent = composite;
+  document.getElementById('score-cat').textContent = cat.tier + ' — ' + cat.label;
+  document.getElementById('hale-est').textContent = haleEst.toFixed(1) + ' ans';
+  document.getElementById('hale-delta').textContent =
+    (totalDelta >= 0 ? '+' : '') + totalDelta.toFixed(1) + ' ans vs médiane';
+  document.getElementById('hale-ref').textContent = haleRef.toFixed(1) + ' ans';
+  document.getElementById('hr-est').textContent = hr.toFixed(2) + '×';
+
+  // Tuiles marqueurs physiques
+  const grid = document.getElementById('markers-grid');
+  grid.innerHTML = '';
+  const allKeys = ['A','B','C','D','E','F'];
+  const allNames = {
+    A:'VO2max', B:'Pompes max', C:'Force préhension',
+    D:'Vitesse marche', E:'Sit-to-Stand', F:'Équilibre yeux fermés'
+  };
+  for(const k of allKeys){
+    const r = results.find(x => x.key === k);
+    const tile = document.createElement('div');
+    tile.className = 'marker-tile';
+    if(!r){
+      tile.className += ' skipped';
+      tile.innerHTML = '<h3>'+k+' — '+allNames[k]+'</h3><div class="marker-value">Non renseigné</div>';
+    } else {
+      let tier = 'mid';
+      if(r.score >= 70) tier = 'high';
+      else if(r.score < 40) tier = 'low';
+      tile.className += ' ' + tier;
+      tile.innerHTML =
+        '<h3>'+r.key+' — '+r.name+'</h3>' +
+        '<div class="marker-value">'+r.value+'</div>' +
+        '<div class="marker-norm">'+r.norm+'</div>' +
+        '<span class="marker-score">Score '+Math.round(r.score)+'/100</span>' +
+        '<div class="marker-bar" style="width:'+Math.round(r.score)+'%"></div>';
+    }
+    grid.appendChild(tile);
+  }
+
+  // Tuiles lifestyle/bio
+  const lsGrid = document.getElementById('lifestyle-grid');
+  lsGrid.innerHTML = '';
+  if(allMods.length === 0){
+    lsGrid.innerHTML = '<div class="lifestyle-tile"><span class="lt-label">Aucun modificateur renseigné</span></div>';
+  } else {
+    for(const m of allMods){
+      const sign = m.value >= 0 ? 'pos' : 'neg';
+      const txt = (m.value >= 0 ? '+' : '') + m.value.toFixed(1) + ' an' + (Math.abs(m.value) >= 2 ? 's' : '');
+      const tile = document.createElement('div');
+      tile.className = 'lifestyle-tile ' + sign;
+      tile.innerHTML = '<span class="lt-label">'+m.label+'</span><span class="lt-val '+sign+'">'+txt+'</span>';
+      lsGrid.appendChild(tile);
+    }
+  }
+
+  // Recommandations
+  const recos = generateRecommendations(results, allMods, composite, age, sex);
+  const recoList = document.getElementById('reco-list');
+  recoList.innerHTML = '';
+  for(const r of recos){
+    const li = document.createElement('li');
+    li.innerHTML = r;
+    recoList.appendChild(li);
+  }
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function generateRecommendations(results, mods, composite, age, sex){
+  const recos = [];
+  const find = k => results.find(r => r.key === k);
+
+  // Top tier physique
+  if(composite >= 70){
+    recos.push('<strong>Excellent niveau physique !</strong> Maintenez votre programme actuel. Priorisez la récupération (sommeil 7-9h, 1 jour récup actif/sem) pour préserver vos gains.');
+  } else if(composite >= 40){
+    recos.push('<strong>Profil dans la moyenne :</strong> 150 min/sem activité modérée + 2 séances renforcement (OMS 2020) = +3-5 points en 12 semaines.');
+  } else {
+    recos.push('<strong>Marge de progression importante :</strong> commencez progressivement (30 min marche/jour + 2 séances renforcement court). Consultez votre médecin avant tout programme intense.');
+  }
+
+  // Marqueurs physiques faibles
+  const a = find('A');
+  if(a && a.score < 40) recos.push('<strong>Cardio (VO2max bas) :</strong> 2 séances Zone 2 (45-60 min, FC ~65% FCmax) + 1 HIIT/semaine (4×4 norvégien).');
+  else if(!a) recos.push('<strong>Évaluez votre VO2max</strong> avec un test de Cooper ou un Step Test — c\'est le marqueur le plus prédictif (HR jusqu\'à 5).');
+
+  const b = find('B');
+  if(b && b.raw < 10) recos.push('<strong>Pompes &lt;10 :</strong> risque CV élevé. Programme progressif : pompes inclinées contre un mur ou banc, 3 séries × max, 3×/semaine.');
+
+  const c = find('C');
+  if(c && c.score < 40) recos.push('<strong>Force préhension faible :</strong> farmer carries (port de charges 20-30m), suspensions à la barre, hand-grippers. 3×/semaine.');
+
+  const e = find('E');
+  if(e && e.score < 40) recos.push('<strong>Force jambes :</strong> squats progressivement chargés (gobelet squat haltère/KB), fentes, montées de marches. Objectif : 20 squats propres.');
+
+  const f = find('F');
+  if(f && f.raw < 10) recos.push('<strong>Équilibre &lt; 10s (seuil Araujo) :</strong> exercices proprioceptifs quotidiens. Brossage dents sur un pied, marche sur ligne. 5 min/jour suffisent.');
+
+  // Lifestyle clés
+  const smokingMod = mods.find(m => m.key === 'smoking');
+  if(smokingMod && smokingMod.value < -2) recos.push('<strong>Arrêt du tabac prioritaire :</strong> +5 à +10 ans HALE en 5-10 ans post-arrêt. Tabac-Info-Service 39 89 ou consultation tabacologue.');
+
+  const sleepMod = mods.find(m => m.key === 'sleep');
+  if(sleepMod && sleepMod.value < -1) recos.push('<strong>Sommeil :</strong> viser 7-8h régulières. Hygiène du sommeil : pas d\'écran 1h avant, chambre 17-19°C, lever fixe week-end inclus.');
+
+  const bmiMod = mods.find(m => m.key === 'bmi');
+  if(bmiMod && bmiMod.value < -1.5) recos.push('<strong>Composition corporelle :</strong> perte de 5-10% du poids = +1,5 à +3 ans HALE. Approche diététique méditerranéenne + 150 min cardio/sem.');
+
+  const apobMod = mods.find(m => m.key === 'apob');
+  if(apobMod && apobMod.value < -1) recos.push('<strong>ApoB élevé :</strong> consulter pour évaluation cardiovasculaire (statine ? PCSK9 ?). Régime méditerranéen + oméga-3 (2 g EPA/DHA).');
+
+  const crpMod = mods.find(m => m.key === 'hscrp');
+  if(crpMod && crpMod.value < -1) recos.push('<strong>hs-CRP élevé (inflammation) :</strong> bilan étiologique. Régime anti-inflammatoire (oméga-3, polyphénols), activité régulière, perte de poids viscérale.');
+
+  const sbpMod = mods.find(m => m.key === 'sbp');
+  if(sbpMod && sbpMod.value < -1) recos.push('<strong>HTA :</strong> automesure 3×3 jours/semaine. Régime DASH (sodium &lt;5g/j), activité ≥150 min/sem, perte poids si IMC&gt;25. Consultation si TA confirmée &gt;140/90.');
+
+  // Spécificité âge
+  if(age >= 65) recos.push('<strong>Spécifique ≥65 ans :</strong> priorité prévention chutes (équilibre + force quadriceps + vitesse marche). Programmes STEADI (CDC) ou PIED en France.');
+
+  return recos;
+}
+
+// =================== EVENTS ===================
+
+document.getElementById('btn-compute').addEventListener('click', compute);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.querySelectorAll('input').forEach(i => { if(i.type === 'checkbox') i.checked = false; else i.value = ''; });
+  document.querySelectorAll('select').forEach(s => s.value = '');
+  document.body.classList.remove('bio-active');
+  document.getElementById('results').classList.remove('visible');
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+document.querySelectorAll('input').forEach(i => {
+  i.addEventListener('keypress', e => {
+    if(e.key === 'Enter' && i.type !== 'checkbox'){
+      e.preventDefault();
+      compute();
+    }
+  });
+});
+
+// Exposer pour tests
+window.HALE_HYBRID = { compute, normalizeScore, vo2FromCooper, vo2FromStep, deltaHaleFromScore, hrFromScore, computeLifestyleModifiers, computeBioModifiers };
+</script>
+
+</body>
+</html>
